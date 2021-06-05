@@ -6,12 +6,11 @@ import argparse
 import time
 import math
 import numpy as np
-
-import torch
-import torch.optim as optim
-import torch.backends.cudnn as cudnn
-
+import numpy as np
+import numpy as np
+import numpy as np
 from data import *
+
 import tools
 
 from utils.vocapi_evaluator import VOCAPIEvaluator
@@ -60,6 +59,7 @@ def parse_args():
                         help='Gamma update for SGD')
 
     return  parser.parse_args()
+
 
 def train():
     args = parse_args()
@@ -155,10 +155,10 @@ def train():
     # optimizer setup
     base_lr =args.lr
     tmp_lr = base_lr
-    optimizer = optim.SGD(model.parameters(),
-                          lr=args.lr,
-                          momentum=args.momentum,
-                          weight_decay=args.weight_decay)
+    optimizer = torch.optim.SGD(model.parameters(),
+                                lr=args.lr,
+                                momentum=args.momentum,
+                                weight_decay=args.weight_decay)
 
     max_epoch = cfg['max_epoch']
     epoch_size = len(dataset) // args.batch_sizetargets

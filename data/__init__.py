@@ -1,28 +1,17 @@
-from .voc0712 import VOCDetection, VOCAnnotationTransform, VOC_CLASSES, VOC_ROOT
-from .config import *
 import torch
 import cv2
 import numpy as np
 
 def detection_collate(batch):
-    """Custom collate fn for dealing with batches of images that have a different
-    number of associated object annotations (bounding boxes).
-
-    Arguments:
-        batch: (tuple) A tuple of tensor images and lists of annotations
-
-    Return:
-        A tuple containing:
-            1) (tensor) batch of images stacked on their 0 dim
-            2) (list of tensors) annotations for a given image are stacked on
-                                 0 dim
-    """
-    targets = []
+    target = []
     imgs = []
     for sample in batch:
         imgs.append(sample[0])
-        targets.append(torch.FloatTensor(sample[1]))
-    return torch.stack(imgs, 0), targets
+        target.append(torch.FloatTensor(sample[1]))
+
+
+
+
 
 def base_transform(image, size, mean, std):
     x = cv2.resize(image, (size[1], size[0])).astype(np.float32)
@@ -40,3 +29,13 @@ class BaseTransform:
 
     def __call__(self, image, boxes=None, labels=None):
         return base_transform(image, self.size, self.mean, self.std), boxes, labels
+
+if __name__ == '__main__':
+    img = torch.randint(0, 255, (3, 2, 2))
+    img = img.type(torch.float32)
+    img = img.unsqueeze(0)
+
+    img = torch.nn.functional.interpolate(img, size=[4, 4], mode='bilinear')
+
+    print(img)
+
