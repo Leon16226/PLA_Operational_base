@@ -1,0 +1,66 @@
+# 基本概念
+工作区workspace （git add 文件名）-> 暂存区stage （git commit -m ''）-> 本地仓库
+
+# 1.本地仓库初始化
+# 1.1项目文件夹为空
+git init
+# 非空
+git add 文件1
+git add 文件2
+git commit -m 'initial project version'
+# 1.2文件状态
+文件只有两种状态：已跟踪（Unmodified+Modified+Staged）|未跟踪
+git status 查看文件状态
+
+# 2. 版本回退
+git log 查看提交历史
+git reset --hard commit_id(校验和) 退回到这个版本
+git reset --hard HEAD^ 上一个版本
+git reset --hard HEAD^^ 上上个版本
+
+# 回到以前最新版本
+git reflog 查看历史命令
+git reset --hard commit_id
+
+# git rest的两个用法
+1.版本回退
+2.讲暂存区文件回退到工作区 git reset HEAD 文件名
+
+# 撤销文件修改
+git checkout --filename
+如果文件已经提交到缓存区
+先git reset HEAD 文件名，再上面的操作
+
+# 删除文件
+git rm filename
+
+# 新建远程仓库
+# case1:命令行新建一个远程仓库
+echo "# repo_name" >>README.md
+git init
+git add README.md
+git commit -m "first commit"
+git barch -M master
+# 关联远程仓库
+git remote add origin git@github.com:Cassieyy/repo_name.git
+# 第一次推送master分支的所有内容
+git push -u origin master
+# 第一次以后,用以下命令推送最新修改到远程仓库
+git push origin master
+
+# case2:
+# 建立联系
+git remote add origin git@github.com:Cassieyy/repo_name.git
+git remote add origin git@github.com:Leon16226/PLA_Operational_base.git
+git branch -M master
+# 第一次推送master的所有内容
+git push -u origin master
+# 第一次以后,用以下命令推送最新修改到远程仓库
+git push origin master
+
+# 报错
+fatal: remote origin already exists.
+git remote rm origin(删除关联的origin的远程库)
+
+
+
