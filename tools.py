@@ -274,6 +274,76 @@ def gt_creator(input_size, stride, label_lists, anchor_size):
 
     return gt_tensor
 
+# v3编码
+def multi_gt_creator(input_size, strides, label_lists=[], archor_size=None):
+    batch_size = len(label_lists)
+    h, w = input_size
+    num_scale = len(strides)
+    gt_tensor = []
+
+    all_anchor_size = archor_size
+    anchor_number = len(all_anchor_size) // num_scale
+    for s in strides:
+        gt_tensor.append(np.zeros([batch_size, h//s, w//s, anchor_number, 1+1+4+1+4]))
+    for batch_index in range(batch_size):
+        for gt_label in label_lists[batch_index]:
+            gt_class = int(gt_label[-1])
+            xmin, ymin, xmax, ymax = gt_label[:-1]
+            c_x = (xmax + xmin) / 2 * w
+            c_y = (ymax + ymin) / 2 * h
+            box_w = (xmax - xmin) * w
+            box_h = (ymax - ymin) * h
+
+            if box_w < 1. or box_h < 1.:
+                continue
+
+            anchor_boxes = set_anchors(all_anchor_size)
+            gt_box = np.array([[0, 0, box_w, box_h]])
+            iou = compute_iou(anchor_boxes, gt_box)
+
+            iou_mask = (iou > ignore_thresh)
+
+            if iou_mask.sum() == 0:
+                index = np.argmax(iou)
+                s_index = index // anchor_number
+                ab_ind = index - s_index * anchor_number
+                s = strides[s_index]
+                p_w, p_h = anchor_boxes[index, 2], anchor_boxes[index, 3]
+                #
+                c_x_s = c_x / s
+                c_y_s = c_y / s
+                grid_x = int(c_x_s)
+                grid_y = int(c_y_s)
+                #
+                tx = c_x_s - grid_x
+                ty = c_y_s - grid_y
+                tw = np.log(box_w / p_w)
+                th = np.log(box_h / p_h)
+                weight = 2.0 - (box_w / w)*(box_h /h)
+
+                if grid_y < gt_tensor[s_index].shape[1] and grid_x < gt_tensor[s_index].shape[2]:
+                    gt_tensor[s_index][batch_index, grid_y, grid_x, ab_ind, 0] = 1.0
+                    gt_tensor[s_index][batch_index, grid_y, grid_x, ab_ind, 1] = gt_class
+                    gt_tensor[s_index][batch_index, grid_y, grid_x, ab_ind, 2:6] = np.array([tx, ty, tw, th])
+                    gt_tensor[s_index][batch_index, grid_y, grid_x, ab_ind, 6] = weight
+                    gt_tensor[s_index][batch_index, grid_y, grid_x, ab_ind, 7:] = np.array([xmin, ymin, xmax, ymax])
+            else:
+                best_index = np.argmax(iou)
+                for index, iou_m in enumerate(iou_mask):
+                    if iou_m:
+                        if index == best_index:
+                            # 和上面相同
+                        else:
+                            s_index = index // anchor_number
+                            ab_ind = index - s_index * anchor_number
+                            s = strides[s_index]
+
+    gt_tensor = [gt.reshape(batch_size, -1, 1+1+4+1+4) for gt in gt_tensor]
+    gt_tensor = np.concatenate(gt_tensor, 1)
+
+    return gt_tensor
+
+
 def DIou(bboxes_a, bboxes_b, batch_size):
     B = batch_size
 
