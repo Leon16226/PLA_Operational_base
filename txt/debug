@@ -1,0 +1,8 @@
+# 横键
+1. step over F8 单步执行
+2. step into F7 会进入源码
+3. step into code alt+shift+F7
+4. step out shift+F8
+5. resume program F9 下一步
+
+可以中途设置断点
