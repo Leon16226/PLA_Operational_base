@@ -1,0 +1,6 @@
+# numpy
+1. n.ravel()和np.flatten()
+多维数组降为一维，前者是拷贝，后者是视图
+
+2.np.ceil()和np.floor()
+向上和向下取整
