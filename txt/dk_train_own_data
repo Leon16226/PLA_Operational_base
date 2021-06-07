@@ -1,0 +1,86 @@
+# 网站
+https://blog.csdn.net/qq_39507748/article/details/110819929
+
+# darknet
+修改makefile文件进行配置
+
+# 查看gpu状态
+nvidia-smi
+
+# voc数据集------------------------------------------------------------------------------
+只关注三个文件夹：
+-Annotations （xml标签）
+-ImageSets
+--Layout （人体部位数据）
+--Main （目标检测数据） （三个文件train.txt val.txt trainval.txt）
+--Segmentation （用于分割的数据）
+-JPEGImages
+
+下载的时候训练集、测试集是分开的，所以要把数据都混合起来
+
+放在darknet同级目录下 darknet/VOCdevkit/VOC2007
+
+
+# 转化为darknet格式
+darknet是保存在.txt文件中的
+1 class_id cx cy w h
+2
+3
+
+# 格式转换
+voc_label.py脚本放在同级目录下
+
+根据实际情况修改代码
+
+运行代码
+给代码加头部
+ls
+./voc_label.py
+
+# 训练-------------------------------------------------------------------------------------
+https://blog.csdn.net/qq_39507748/article/details/110850178
+（这里训练集和验证集和在一起训练了）
+
+训练需要三个文件，
+1. data/yolo.names-----------------------------------------
+存储所有样本的目标类别
+2. cfg/voc.data--------------------------------------------
+存储类别数，训练集路径,验证集路径，保存权重路径
+3. cfg/yolov4-custom.cfg------------------------------------
+官方网络结构
+注意filters和classes参数要修改三个地方
+为了更大的精度，宽和高应该越大，如果出现Out of memory的错误，那因该上升subdiisions=16，32or64
+
+# makefile文件修改
+GPU=1
+OPENCV=1
+
+# 命令------------------------------------------------------------------------------------
+# 训练
+./darknet detector train cfg/voc.data cfg/yolov4-custom.cfg yolov4.conv.137 -gpus 0,1 -map
+# 多GPU训练
+./darknet detector train cfg/coco.data cfg/yolov3.cfg darknet53.conv74 -gpus 0,1,2,3
+# 从检查点重新启动训练
+./darknet detector train cfg/voc.data cfg/yolov4-custom.cfg yolov4.conv.137 backup/yolov4-custom_last.weights -gpus 0,1
+# 指定第1个gpu训练
+./darknet -i 1 imagenet test cfg/alexnet.cfg alexnet.weights
+# 效果测试
+./darknet detector test cfg/voc.data cfg/yolov4.cfg backup/yolov4_final.weights dog.jpg -ext_output
+# video-file测试效果
+./darknet detector demo cfg/voc.data cfg/yolov4.cfg backup/yolov4_final.weights test.mp4 -ext_output
+# 网络数据流
+./darknet detector demo cfg/voc.data cfg/yolov4.cfg backup/yolov4_final.weights http://xxx -ext_output
+
+# 什么时候应该停止训练
+可以手动停止训练的
+训练完了可能会过拟合，所以要选择一个适合的权重（To get weights from Early Stopping Point）
+
+比较多个权重文件，选出有最高mAP的那一个
+darknet.exe detector map data/obj.data yolo-obj.cfg backup\yolo-obj_7000.weights
+darknet.exe detector map data/obj.data yolo-obj.cfg backup\yolo-obj_8000.weights
+darknet.exe detector map data/obj.data yolo-obj.cfg backup\yolo-obj_9000.weights
+
+
+# 计算map-------------------------------------------------------------------------------
+
+

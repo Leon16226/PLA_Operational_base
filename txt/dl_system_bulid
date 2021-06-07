@@ -1,0 +1,89 @@
+# 参考网站地址
+https://blog.csdn.net/ys578676728/article/details/102669085
+
+# 系统配置
+ubuntu18.04+CUDA10.1+porch1.8.1+Anaconda+opencv3.4
+
+# 安装过程
+下载lantern
+
+系统升级一下
+$ sudo apt-get update
+$ sudo apt-get upgrade
+
+检查推荐的nvidia驱动
+$ ubuntu-drivers devices
+安装450或者440，不要安装推荐的460
+sudo apt install nvidia-driver-450
+查看GPU信息
+$ nvidia-smi
+报错的话重启一下
+
+安装vim
+$ sudo apt-get install vim
+
+安装anaconda
+先下载
+https://www.anaconda.com/distribution/
+$ bash Anaconda3-2020.11-Linux-x86_64.sh
+重新打开一个终端查看安装是否成功
+$ python                 // Python 3.7.4
+$ which python           // /home/.../anaconda3/bin/python
+$ conda --version        // conda 4.7.12
+
+安装CUDA10.1
+$ wget http://developer.download.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda_10.1.243_418.87.00_linux.run
+$ sudo sh cuda_10.1.243_418.87.00_linux.run
+检测到已经有驱动：continue
+输入：accept
+CUDA安装选项：不选驱动
+
+添加环境变量
+$ vim .bashrc
+测试是否安装成功
+$ cd ~/NVIDIA_CUDA-10.1_Samples
+$ sudo make all -j8
+$ cd bin/x86_64/linux/release
+$ ./deviceQuery
+Result = PASS 表示安装成功
+查看CUDA版本
+$ nvcc -V
+
+安装CUDNN
+下载 注意是for CUDA10.1
+https://developer.nvidia.com/rdp/cudnn-download
+cuDNN Runtime Library for Ubuntu18.04 (Deb)
+cuDNN Developer Library for Ubuntu18.04 (Deb)
+cuDNN Code Samples and User Guide for Ubuntu18.04 (Deb)
+
+$ sudo dpkg -i libcudnn8_8.0.5.39-1+cuda10.1_amd64.deb
+$ sudo dpkg -i libcudnn8-dev_8.0.5.39-1+cuda10.1_amd64.deb
+$ sudo dpkg -i libcudnn8-samples_8.0.5.39-1+cuda10.1_amd64.deb
+
+$ cp -r /usr/src/cudnn_samples_v8 /$HOME
+$ cd $HOME/cudnn_samples_v8/mnistCUDNN/
+$ make all
+$ ./mnistCUDNN
+Test passed! 表示安装成功
+
+查看CUDNN版本
+$ cat /usr/include/cudnn.h | grep CUDNN_MAJOR -A 2
+
+#安装pytorch
+conda create -n pytorch-gpu python=3.6
+conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
+
+#安装opencv
+
+要安装这个libopencv-dev
+sudo apt-get install libopencv-dev
+
+
+# 用darnet训练自己的数据集---------------------------------------------------------------------
+
+安装git
+sudo apt-get install git
+
+git clone https://github.com/AlexeyAB/darknet.git
+
+
