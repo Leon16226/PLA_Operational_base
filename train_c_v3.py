@@ -177,6 +177,8 @@ def train(hyp):
     model.nc = nc
     model.hyp = hyp
     model.gr = 1.0
+    # Trick2:类别权重处理不平衡问题
+    # 类别多权重就低
     model.class_weights = labels_to_class_weights(dataset.labels, nc).to(device)
 
     # Trick2:EMA移动指数平均对模型的参数做平均，以求提高测试指标并增加模型鲁棒性
