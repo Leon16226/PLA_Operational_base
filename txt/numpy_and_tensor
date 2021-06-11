@@ -11,13 +11,15 @@ x1％x2 并且与除数x2具有相同的符号
 4. np.fliplr()和np.flipud()
 数组左右方向上每行元素翻转，列表示不变但是现实顺序变了
 
-5. import random
-random.random() [0,1)之间一个随机浮点数
+5. import numpy.random
+random.rand() [0,1)之间一个随机浮点数  给定维度 random.rand(4，2)
+random.randn(4,2) 正态分布
+random.randint(1,10) 随机整数 [1,10)
 random.uniform(x,y)   在[x,y]间随机生成一个实数
-random.randint(1,10) 随机整数
 random.choice(sequence) 随机选择一个
 radnom.shuffle(sequence) 随机打乱
 random.sample(sequence, k) 随机选择k个返回
+random.seed() 随机数可预测
 
 6. np.bincount()
 # 我们可以看到x中最大的数为7，因此bin的数量为8，那么它的索引值为0->7

@@ -41,7 +41,7 @@ hyp = {'giou': 3.54,  # giou loss gain
        'translate': 0.05 * 0,  # image translation (+/- fraction)
        'scale': 0.05 * 0,  # image scale (+/- gain)
        'shear': 0.641 * 0}
-f = glob.glob('hyp*.txt') #返回所匹配的文件路径列表
+f = glob.glob('hyp*.txt')  # 返回所匹配的文件路径列表
 if f:
     for k, v in zip(hyp.keys(), np.loadtxt(f[0])):
         hyp[k] = v
@@ -113,7 +113,7 @@ def train(hyp):
 
     start_epoch = 0
     best_fitness = 0.0
-    #attempt_download(weights)
+    # attempt_download(weights)
     if weights.endswith('.pt'):
         pass
     elif len(weights) > 0:
@@ -128,7 +128,7 @@ def train(hyp):
         model, optimizer = amp.initialize(model, optimizer, opt_level='O1', verbosity=0)
 
     # scheduler ?
-    lf = lambda x: (((1 + math.cos(x * math.pi / epochs)) /2) ** 1.0) * 0.95 + 0.05
+    lf = lambda x: (((1 + math.cos(x * math.pi / epochs)) / 2) ** 1.0) * 0.95 + 0.05
     scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
     scheduler.last_epoch = start_epoch - 1
 
@@ -143,7 +143,7 @@ def train(hyp):
     # 4.为数据创建Sampler
     # 5.启动工具torch.distrubuted.launch在每个主机上执行一次脚本，开始徐那里拿
     # 6.destory_process_group()销毁进程组
-    if device.type != 'cpu' and torch.cuda.device_count() >1 and torch.distributed.is_available():
+    if device.type != 'cpu' and torch.cuda.device_count() > 1 and torch.distributed.is_available():
         torch.distributed.init_process_group(backend='nccl',
                                              init_method='tcp://127.0.0.1:9999',
                                              world_size=1,
@@ -151,10 +151,8 @@ def train(hyp):
         model = torch.nn.parallel.DistributedDataParallel(model, find_unused_parameters=True)
         model.yolo_layers = model.module.yolo_layers
 
-
-
     # Dataset
-    dataset = LoadImageAndLabels(train_path,img_size, batch_size,
+    dataset = LoadImageAndLabels(train_path, img_size, batch_size,
                                  augment=True,
                                  hyp=hyp,
                                  rect=opt.rect,
@@ -186,7 +184,7 @@ def train(hyp):
 
     nb = len(dataloader)
     n_burn = max(3 * nb, 500)
-    maps = np.zeros(nc) # mAP per class
+    maps = np.zeros(nc)  # mAP per class
     results = (0, 0, 0, 0, 0, 0, 0)
     t0 = time.time()
 
@@ -198,8 +196,7 @@ def train(hyp):
         if dataset.imge_weights:
             pass
 
-        mloss = torch.zeros(4,device=device)
-
+        mloss = torch.zeros(4, device=device)
 
         pbar = tqdm(enumerate(dataloader), total=nb)
         for i, (imags, targets, paths, _) in pbar:
@@ -208,23 +205,22 @@ def train(hyp):
             imgs = imags.to(device, non_blocking=True).float() / 255.0
 
             # Warup
-            if ni<= n_burn:
+            if ni <= n_burn:
                 xi = [0, n_burn]
                 model.gr = np.interp(ni, xi, [0.0, 1.0])
                 accumulate = max(1, np.interp(ni, xi, [1, 64 / batch_size]).round())
                 for j, x in enumerate(optimizer.param_groups):
-                    x['lr'] = np.interp(ni, xi, [0.1 if j==2 else 0.0, x['initial_lr'] * lf(epoch)])
-
+                    x['lr'] = np.interp(ni, xi, [0.1 if j == 2 else 0.0, x['initial_lr'] * lf(epoch)])
 
             # Multi-scale
             if opt.multi_scale:
-               pass
+                pass
 
             # Forward
             pred = model(imgs)
 
             # Loss
-            loss, loss_items = None
+            loss, loss_items = compute_loss(pred, targets, model)
             if not torch.isfinite(loss):
                 return results
 
@@ -235,48 +231,10 @@ def train(hyp):
             # Optimize
             optimizer.step()
 
-
             # Update scheduler
             scheduler.step()
 
-
-
         scheduler.step()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 if __name__ == "__main__":
@@ -317,9 +275,58 @@ if __name__ == "__main__":
         # 可视化训练
         tb_writer = SummaryWriter(comment=opt.name)
         train(hyp)
+    else:
+        if opt.bucket:
+            # 用命令行下载谷歌存储文件
+            os.system('')
 
+        for _ in range(1):
+            if os.path.exists('evolve.txt'):
+                parent = 'single'
+                x = np.loadtxt('evolve.txt', ndmin=2)
+                n = min(5, len(x))
+                x = x[np.argsort(-fitness(x))][:n]
+                # 减去最小的适应度是为了防止适应度出现负数
+                # 这是后代表村下来的概率，而概率是不能为负的
+                w = fitness(x) - fitness(x).min() + 1e-3# 权重
+                # parent决定如何选择上一代
+                # single就选择上一代中最好的那个
+                # weighted代表得分前5个加权平均结果作为下一代
+                if parent == 'single' or len(x) == 1:
+                    # weights代表成员出现的概率
+                    x = x[random.choices(range(n), weights=w)[0]]
+                elif parent == 'weighted':
+                    x = (x * w.reshape(n, 1)).sum(0) / w.sum() # new parent
 
+                # Mutate 交叉&变异
+                method, mp, s = 3, 0.9, 0.2 # 20% sigma
+                npr = np.random
+                npr.seed(int(time.time()))
+                g = np.array([]) # 加权
+                ng = len(g)
+                # All parameters are mutated simultaneously
+                # based on a normal distribution with about 20% 1-sigma:
+                if method == 1:
+                    v = (npr.randn(ng) * npr.randn() * g * s + 1) ** 2.0
+                elif method == 2:
+                    v = (npr.randn(ng) * npr.randn(ng) * g * s + 1) ** 2.0
+                for i, k in enumerate(hyp.keys()):
+                    hyp[k] = x[i + 7] * v[i] # mutate
 
+    # 参数超过不合理范围，剪去
+    keys = ['lr0', 'iou_t', 'momentum',
+            'weight_decay', 'hsv_s',
+            'hsv_v', 'translate',
+            'scale', 'fl_gamma']
+    limits = [(1e-5, 1e-2), (0.00, 0.70),
+          (0.60, 0.98), (0, 0.001),
+          (0, .9), (0, .9), (0, .9),
+          (0, .9), (0, 3)]
+
+    for k, v in zip(keys, limits):
+        hyp[k] = np.clip(hyp[k], v[0], v[1])
+
+    results = train(hyp=copy())
 
 
 
