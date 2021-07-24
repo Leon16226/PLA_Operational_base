@@ -61,6 +61,10 @@ p1 = torch.tensor([[0.0, 0.0], [1.0, 1.0]])
 tensor([[0.0000, 1.4142],
         [1.4142, 2.8284]])
 
+11. 两大转置函数transpose()和permute()
+torch.transpose(input, 默认维度0， 默认维度1)
+input.permute(要传入所有维度)
+
 
 
 

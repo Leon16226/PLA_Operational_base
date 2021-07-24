@@ -1,8 +1,8 @@
 # 统计误报数据
 
-File_Root = '/Users/apple/Desktop/1月误报结果/clk.txt'
+File_Root = '/Users/apple/Desktop/视频/C抛洒物12月正报结果/51.txt'
 labels = {'Bag': [], 'Bottle': [], 'Box': [],
-          'MealBox': [], 'BullBarrels': []}
+          'MealBox': [], 'Cup': []}
 thresh = 0.6
 
 if __name__ == "__main__":
@@ -59,12 +59,19 @@ if __name__ == "__main__":
     false_kinds = {}
     print('类别 小于%.1f 大于%.1f 总数 百分比' % (thresh, thresh))
     for key, value in labels.items():
-        false, postive = 0, 0
+        # false, postive = 0, 0
+        N1, N2, N3, N4, N5 = 0, 0, 0, 0, 0
         for a in value:
-            if float(a) >= thresh:
-                postive += 1
-            else:
-                false += 1
-        all = false + postive
-        false_kinds[key] = [int(false), int(postive), int(all), all / all_size]
-        print('%s %i %i %i %.5f' % (key, int(false), int(postive), int(all), all / all_size))
+            if float(a) < 0.6 :
+                N1 += 1
+            elif (float(a) >= 0.6) & (float(a) < 0.7):
+                N2 += 1
+            elif (float(a) >= 0.7) & (float(a) < 0.8):
+                N3 += 1
+            elif (float(a) >= 0.8) & (float(a) < 0.9):
+                N4 += 1
+            elif (float(a) > 0.9) & (float(a) < 1):
+                N5 += 1
+        all = N1 + N2 + N3 + N4 + N5
+        # false_kinds[key] = [int(false), int(postive), int(all), all / all_size]
+        print('%s %i %i %i %i %i %i' % (key, int(N1), int(N2), int(N3), int(N4), int(N5), int(all)))

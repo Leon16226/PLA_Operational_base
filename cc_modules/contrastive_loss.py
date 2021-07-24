@@ -64,6 +64,8 @@ class ClusterLoss(nn.Module):
         mask = mask.bool()
         return mask
 
+
+
     def forward(self, c_i, c_j):
         p_i = c_i.sum(0).view(-1)
         p_i /= p_i.sum()
